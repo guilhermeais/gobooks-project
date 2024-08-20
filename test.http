@@ -1,0 +1,13 @@
+
+## Get books
+GET http://localhost:8080/books
+
+### Add a new book
+POST http://localhost:8080/books
+Content-Type: application/json
+
+{
+  "title": "The Lord of the Rings",
+  "author": "J.R.R. Tolkien",
+  "genre": "Fantasy"
+}

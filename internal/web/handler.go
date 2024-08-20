@@ -11,6 +11,10 @@ type BookHandlers struct {
 	bookService *service.BookService
 }
 
+func NewBookHandlers(bookService *service.BookService) *BookHandlers {
+	return &BookHandlers{bookService: bookService}
+}
+
 func (handler *BookHandlers) GetBooks(
 	responseWriter http.ResponseWriter,
 	request *http.Request,
@@ -18,6 +22,7 @@ func (handler *BookHandlers) GetBooks(
 	books, err := handler.bookService.GetAll()
 
 	if err != nil {
+		println("Error on getting books: ", err.Error())
 		http.Error(responseWriter, "Failed to get books", http.StatusInternalServerError)
 		return
 	}
