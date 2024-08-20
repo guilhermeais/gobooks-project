@@ -1,6 +1,9 @@
 package service
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 type Book struct {
 	Id     int
@@ -20,12 +23,14 @@ func NewBookService(db *sql.DB) *BookService {
 func (bookService *BookService) Create(book *Book) error {
 	result, err := bookService.db.Exec("INSERT INTO books (title, author, genre) VALUES (?, ?, ?)", book.Title, book.Author, book.Genre)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	lastInsertId, err := result.LastInsertId()
 
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 

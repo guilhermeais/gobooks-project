@@ -1,9 +1,10 @@
+@BASE_URL = http://localhost:8081
 
 ## Get books
-GET http://localhost:8080/books
+GET {{BASE_URL}}/books
 
 ### Add a new book
-POST http://localhost:8080/books
+POST {{BASE_URL}}/books
 Content-Type: application/json
 
 {
