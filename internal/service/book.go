@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type Book struct {
@@ -45,6 +46,8 @@ func (bookService *BookService) GetAll() ([]Book, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer results.Close()
 
 	var books []Book
 	for results.Next() {
@@ -91,4 +94,66 @@ func (bookService *BookService) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (bookService *BookService) SearchBooksByTitle(title string) ([]Book, error) {
+	results, err := bookService.db.Query("SELECT id, title, author, genre FROM books WHERE title LIKE ?", "%"+title+"%")
+	if err != nil {
+		return nil, err
+	}
+
+	defer results.Close()
+
+	var books []Book
+	for results.Next() {
+		var book Book
+		err = results.Scan(&book.Id, &book.Title, &book.Author, &book.Genre)
+		if err != nil {
+			return nil, err
+		}
+
+		books = append(books, book)
+	}
+
+	return books, nil
+}
+
+func (bookService *BookService) SimulateRead(bookId int, duration time.Duration, result chan string) {
+	now := time.Now()
+
+	book, err := bookService.Get(bookId)
+
+	queryDuration := int(time.Since(now).Milliseconds())
+
+	if err != nil {
+		result <- fmt.Sprintf("Error on reading book %d: %s", bookId, err)
+		return
+	}
+
+	if book == nil {
+		result <- fmt.Sprintf("Book %d not found", bookId)
+		return
+	}
+
+	time.Sleep(duration)
+	result <- fmt.Sprintf("Book %d read in %d seconds (query took %dms)", bookId, duration, queryDuration)
+}
+
+func (bookService *BookService) SimulateReadMultiple(bookIds []int, duration time.Duration) []string {
+	readChannel := make(chan string, len(bookIds))
+
+	now := time.Now()
+	for _, bookId := range bookIds {
+		go bookService.SimulateRead(bookId, duration, readChannel)
+	}
+
+	var results []string
+
+	for i := 0; i < len(bookIds); i++ {
+		results = append(results, <-readChannel)
+	}
+
+	fmt.Printf("All books read in %dms\n", time.Since(now).Milliseconds())
+
+	return results
 }

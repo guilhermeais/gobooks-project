@@ -8,7 +8,13 @@ POST {{BASE_URL}}/books
 Content-Type: application/json
 
 {
-  "title": "The Lord of the Rings",
-  "author": "J.R.R. Tolkien",
-  "genre": "Fantasy"
+  "title": "Moby-Dick",
+  "author": "Herman Melville",
+  "genre": "Adventure"
 }
+
+### Simulate book reading
+POST {{BASE_URL}}/books/simulate
+Content-Type: application/json
+
+[1,2,3,4]

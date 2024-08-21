@@ -5,6 +5,7 @@ import (
 	"gobooks/internal/service"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type BookHandlers struct {
@@ -19,12 +20,29 @@ func (handler *BookHandlers) GetBooks(
 	responseWriter http.ResponseWriter,
 	request *http.Request,
 ) {
-	books, err := handler.bookService.GetAll()
 
-	if err != nil {
-		println("Error on getting books: ", err.Error())
-		http.Error(responseWriter, "Failed to get books", http.StatusInternalServerError)
-		return
+	var books []service.Book = []service.Book{}
+	bookTitle := request.URL.Query().Get("title")
+	if bookTitle != "" {
+		result, err := handler.bookService.SearchBooksByTitle(bookTitle)
+
+		if err != nil {
+			println("Error on searching books: ", err.Error())
+			http.Error(responseWriter, "Failed to search books", http.StatusInternalServerError)
+			return
+		}
+
+		books = result
+	} else {
+		result, err := handler.bookService.GetAll()
+
+		if err != nil {
+			println("Error on getting books: ", err.Error())
+			http.Error(responseWriter, "Failed to get books", http.StatusInternalServerError)
+			return
+		}
+
+		books = result
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
@@ -128,4 +146,20 @@ func (handler *BookHandlers) DeleteBook(
 	}
 
 	responseWriter.WriteHeader(http.StatusNoContent)
+}
+
+func (handler *BookHandlers) SimulateReading(
+	responseWriter http.ResponseWriter,
+	request *http.Request,
+) {
+	var bookIds []int
+
+	if err := json.NewDecoder(request.Body).Decode(&bookIds); err != nil {
+		http.Error(responseWriter, "Failed to parse the payload", http.StatusBadRequest)
+	}
+
+	results := handler.bookService.SimulateReadMultiple(bookIds, 2*time.Second)
+
+	responseWriter.WriteHeader(http.StatusOK)
+	json.NewEncoder(responseWriter).Encode(results)
 }
